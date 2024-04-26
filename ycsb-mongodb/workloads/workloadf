@@ -37,5 +37,5 @@ readmodifywriteproportion=0.5
 
 requestdistribution=zipfian
 
-threadcount=64
+threadcount=128
 mongodb.database=f

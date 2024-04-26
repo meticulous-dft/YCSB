@@ -45,5 +45,5 @@ maxscanlength=100
 
 scanlengthdistribution=uniform
 
-threadcount=64
+threadcount=128
 mongodb.database=e

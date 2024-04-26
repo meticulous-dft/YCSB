@@ -36,5 +36,5 @@ insertproportion=0
 
 requestdistribution=zipfian
 
-threadcount=64
+threadcount=128
 mongodb.database=c
