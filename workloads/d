@@ -17,7 +17,7 @@
 # Workload C: Read only
 #   Application example: user profile cache, where profiles are constructed elsewhere (e.g., Hadoop)
 #                        
-#   Read/update ratio: 95/0/5
+#   Read/update/insert ratio: 50/0/50
 #   Default data size: 10 KB records (100 fields, 100 bytes each, plus key)
 #   Request distribution: zipfian
 
@@ -29,10 +29,10 @@ workload=com.yahoo.ycsb.workloads.CoreWorkload
 
 readallfields=true
 
-readproportion=0.95
+readproportion=0.5
 updateproportion=0
 scanproportion=0
-insertproportion=0.05
+insertproportion=0.5
 
 requestdistribution=zipfian
 
