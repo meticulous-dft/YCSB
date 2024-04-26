@@ -17,7 +17,7 @@
 # Workload D: Read latest workload
 #   Application example: user status updates; people want to read the latest
 #                        
-#   Read/update/insert ratio: 95/0/5
+#   Scan/insert ratio: 95/5
 #   Default data size: 10 KB records (100 fields, 100 bytes each, plus key)
 #   Request distribution: latest
 
@@ -34,9 +34,9 @@ workload=com.yahoo.ycsb.workloads.CoreWorkload
 
 readallfields=true
 
-readproportion=0.95
+readproportion=0
 updateproportion=0
-scanproportion=0
+scanproportion=0.95
 insertproportion=0.05
 
 requestdistribution=latest
