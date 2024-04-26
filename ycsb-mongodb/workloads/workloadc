@@ -38,6 +38,3 @@ requestdistribution=zipfian
 
 threadcount=64
 mongodb.database=c
-
-
-
