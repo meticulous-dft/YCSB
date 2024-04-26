@@ -26,9 +26,9 @@
 # instead interspersed with posts from lots of other threads. The way the YCSB client works is that it will pick a start
 # key, and then request a number of records; this works fine even for hashed insertion.
 
-# 100 GB
-fieldcount=100 # 10kb per record
-recordcount=10000000 # 10M
+# 100 GB, 10M * 10kb per record
+fieldcount=100
+recordcount=10000000
 operationcount=10000000
 workload=com.yahoo.ycsb.workloads.CoreWorkload
 

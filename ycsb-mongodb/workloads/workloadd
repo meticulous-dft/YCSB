@@ -26,9 +26,9 @@
 # which orders items purely by time, and demands the latest, is very different than 
 # workload here (which we believe is more typical of how people build systems.)
 
-# 100 GB
-fieldcount=100 # 10kb per record
-recordcount=10000000 # 10M
+# 100 GB, 10M * 10kb per record
+fieldcount=100
+recordcount=10000000
 operationcount=10000000
 workload=com.yahoo.ycsb.workloads.CoreWorkload
 
