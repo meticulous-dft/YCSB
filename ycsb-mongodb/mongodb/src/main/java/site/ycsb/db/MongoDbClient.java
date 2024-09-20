@@ -608,6 +608,7 @@ public class MongoDbClient extends DB {
             mongo[i] = MongoClients.create(settingsBuilder.build());
             System.out.println("DEBUG mongo server connection to " + mongo[i].toString());
           }
+          enableSharding(mongo[i]);
           db[i] = mongo[i].getDatabase(database);
         }
       } catch (Exception e1) {
@@ -615,6 +616,23 @@ public class MongoDbClient extends DB {
         e1.printStackTrace();
         System.exit(1);
       }
+    }
+  }
+
+  private void enableSharding(MongoClient client) {
+    if (isSharded && !isCollectionCreated(client, database, collection)) {
+      String namespace = database + "." + collection;
+      CreateCollectionOptions options = new CreateCollectionOptions();
+      client.getDatabase(database).createCollection(collection, options);
+
+      BsonDocument enableShardingCmd = new BsonDocument("enableSharding", new BsonString(database));
+      client.getDatabase("admin").runCommand(enableShardingCmd);
+
+      BsonDocument shardCollCmd =
+          new BsonDocument("shardCollection", new BsonString(namespace))
+              .append("key", new BsonDocument("_id", new BsonString("hashed")));
+      client.getDatabase("admin").runCommand(shardCollCmd);
+      System.out.println("enabled sharding on " + namespace);
     }
   }
 
