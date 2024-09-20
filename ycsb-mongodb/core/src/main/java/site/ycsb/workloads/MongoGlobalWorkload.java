@@ -5,24 +5,16 @@ import java.util.Properties;
 import site.ycsb.ByteIterator;
 import site.ycsb.StringByteIterator;
 import site.ycsb.WorkloadException;
-import site.ycsb.generator.DiscreteGenerator;
 
 public class MongoGlobalWorkload extends CoreWorkload {
   private String shardKey;
-  private String locationField;
-  private DiscreteGenerator locationChooser;
-  private String[] locations = {"US", "EU"};
+  private String location;
 
   @Override
   public void init(Properties p) throws WorkloadException {
     super.init(p);
     shardKey = p.getProperty("mongodb.shardKey", "user_id");
-    locationField = p.getProperty("mongodb.locationField", "location");
-
-    locationChooser = new DiscreteGenerator();
-    for (String location : locations) {
-      locationChooser.addValue(1.0, location);
-    }
+    location = p.getProperty("mongodb.location", "US");
   }
 
   @Override
@@ -33,8 +25,7 @@ public class MongoGlobalWorkload extends CoreWorkload {
     values.put(shardKey, new StringByteIterator(key));
 
     // Add location for zone distribution
-    String location = locationChooser.nextString();
-    values.put(locationField, new StringByteIterator(location));
+    values.put("location", new StringByteIterator(location));
 
     return values;
   }
