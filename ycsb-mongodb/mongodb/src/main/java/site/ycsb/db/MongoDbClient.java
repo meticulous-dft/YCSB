@@ -54,6 +54,7 @@ import site.ycsb.ByteArrayByteIterator;
 import site.ycsb.ByteIterator;
 import site.ycsb.DB;
 import site.ycsb.Status;
+import site.ycsb.StringByteIterator;
 import site.ycsb.generator.DiscreteGenerator;
 
 class UuidUtils {
@@ -742,9 +743,11 @@ public class MongoDbClient extends DB {
       Document q = new Document("_id", key);
       if (!shardKey.isEmpty()) {
         q.put(shardKey, key); // shard key is the same as _id
+        fields.add(shardKey);
       }
       if (!location.isEmpty()) {
         q.put("location", location); // geo sharded
+        fields.add("location");
       }
 
       Document fieldsToReturn;
@@ -764,6 +767,12 @@ public class MongoDbClient extends DB {
         // TODO: this is wrong.  It is totally violating the expected type of the values in result,
         // which is ByteIterator
         // TODO: somewhere up the chain this should be resulting in a ClassCastException
+        if (!location.isEmpty()) {
+          queryResult.put("location", new StringByteIterator(queryResult.getString("location")));
+        }
+        if (!shardKey.isEmpty()) {
+          queryResult.put(shardKey, new StringByteIterator(queryResult.getString(shardKey)));
+        }
         result.putAll(new LinkedHashMap(queryResult));
         return Status.OK;
       }
