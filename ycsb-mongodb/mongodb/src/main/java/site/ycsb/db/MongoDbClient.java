@@ -37,6 +37,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
@@ -107,6 +108,11 @@ public class MongoDbClient extends DB {
 
   private static String collection;
 
+  private static String shardKey;
+
+  // geo sharded
+  private static String location;
+
   /** Count the number of times initialized to teardown on the last {@link #cleanup()}. */
   private static final AtomicInteger initCount = new AtomicInteger(0);
 
@@ -116,7 +122,7 @@ public class MongoDbClient extends DB {
    */
   private static float compressibility = (float) 1.0;
 
-  private static String datatype = "string";
+  private static String datatype = "binData";
 
   private static final String algorithm = "AEAD_AES_256_CBC_HMAC_SHA_512-Random";
 
@@ -433,6 +439,10 @@ public class MongoDbClient extends DB {
       database = props.getProperty("mongodb.database", "ycsb");
       collection = props.getProperty("mongodb.collection", "usertable");
 
+      // geo sharded
+      shardKey = props.getProperty("mongodb.shardKey", "");
+      location = props.getProperty("mongodb.location", "");
+
       // Retrieve username and password from properties, set to empty string if they are undefined
       String username = props.getProperty("mongodb.username", "");
       String password = props.getProperty("mongodb.password", "");
@@ -646,6 +656,12 @@ public class MongoDbClient extends DB {
     try {
       MongoCollection<Document> collection = db[serverCounter++ % db.length].getCollection(table);
       Document q = new Document("_id", key);
+      if (!shardKey.isEmpty()) {
+        q.put(shardKey, key); // shard key is the same as _id
+      }
+      if (!location.isEmpty()) {
+        q.put("location", location); // geo sharded
+      }
       collection.deleteMany(q);
       return Status.OK;
     } catch (Exception e) {
@@ -724,6 +740,13 @@ public class MongoDbClient extends DB {
     try {
       MongoCollection<Document> collection = db[serverCounter++ % db.length].getCollection(table);
       Document q = new Document("_id", key);
+      if (!shardKey.isEmpty()) {
+        q.put(shardKey, key); // shard key is the same as _id
+      }
+      if (!location.isEmpty()) {
+        q.put("location", location); // geo sharded
+      }
+
       Document fieldsToReturn;
 
       Document queryResult;
@@ -768,9 +791,19 @@ public class MongoDbClient extends DB {
     try {
       MongoCollection<Document> collection = db[serverCounter++ % db.length].getCollection(table);
       Document q = new Document("_id", key);
+      if (!shardKey.isEmpty()) {
+        q.put(shardKey, key); // shard key is the same as _id
+      }
+      if (!location.isEmpty()) {
+        q.put("location", location); // geo sharded
+      }
       Document u = new Document();
       Document fieldsToSet = new Document();
       for (String tmpKey : values.keySet()) {
+        if (Objects.equals(tmpKey, "location") || Objects.equals(tmpKey, shardKey)) {
+          // do not update shard key or location
+          continue;
+        }
         byte[] data = overrideDataIfDiscrete(tmpKey, values.get(tmpKey).toArray());
         if (datatype.equals("string")) {
           fieldsToSet.put(tmpKey, new String(applyCompressibility(data)));
@@ -818,6 +851,9 @@ public class MongoDbClient extends DB {
       // { "_id":{"$gte":startKey, "$lte":{"appId":key+"\uFFFF"}} }
       Document scanRange = new Document("$gte", startkey);
       Document q = new Document("_id", scanRange);
+      if (!location.isEmpty()) {
+        q.put("location", location); // geo sharded
+      }
       Document s = new Document("_id", INCLUDE);
       if (fields != null) {
         fieldsToReturn = new Document();

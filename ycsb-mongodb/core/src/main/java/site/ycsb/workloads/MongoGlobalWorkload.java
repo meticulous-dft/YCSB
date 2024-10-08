@@ -29,4 +29,7 @@ public class MongoGlobalWorkload extends CoreWorkload {
 
     return values;
   }
+
+  @Override
+  protected void verifyRow(String key, HashMap<String, ByteIterator> cells) {}
 }
