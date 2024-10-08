@@ -823,7 +823,11 @@ public class MongoDbClient extends DB {
       u.put("$set", fieldsToSet);
       UpdateResult res = collection.updateOne(q, u);
       if (res.getMatchedCount() == 0) {
-        System.err.println("Nothing updated for key " + key);
+        System.err.println("Can not find key " + key);
+        return Status.ERROR;
+      }
+      if (res.getModifiedCount() == 0) {
+        System.err.println("Nothing updated for " + key);
         return Status.ERROR;
       }
       return Status.OK;
