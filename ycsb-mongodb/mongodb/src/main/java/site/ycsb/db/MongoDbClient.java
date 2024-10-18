@@ -50,6 +50,7 @@ import org.bson.BsonInt64;
 import org.bson.BsonString;
 import org.bson.Document;
 import org.bson.UuidRepresentation;
+import org.bson.types.ObjectId;
 import site.ycsb.ByteArrayByteIterator;
 import site.ycsb.ByteIterator;
 import site.ycsb.DB;
@@ -807,7 +808,8 @@ public class MongoDbClient extends DB {
         q.put("location", location); // geo sharded
       }
       Document u = new Document();
-      Document fieldsToSet = new Document();
+      Document fieldsToSet = new Document().append("updateID", ObjectId.get().toString());
+
       for (String tmpKey : values.keySet()) {
         if (Objects.equals(tmpKey, "location") || Objects.equals(tmpKey, shardKey)) {
           // do not update shard key or location
