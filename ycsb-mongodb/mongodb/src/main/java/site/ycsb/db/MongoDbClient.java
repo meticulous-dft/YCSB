@@ -34,7 +34,6 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -765,16 +764,13 @@ public class MongoDbClient extends DB {
       }
 
       if (queryResult != null) {
-        // TODO: this is wrong.  It is totally violating the expected type of the values in result,
-        // which is ByteIterator
-        // TODO: somewhere up the chain this should be resulting in a ClassCastException
-        if (!location.isEmpty()) {
-          queryResult.put("location", new StringByteIterator(queryResult.getString("location")));
+        for (Map.Entry<String, Object> entry : queryResult.entrySet()) {
+          if (entry.getValue() instanceof String) {
+            result.put(entry.getKey(), new StringByteIterator((String) entry.getValue()));
+          } else if (entry.getValue() instanceof byte[]) {
+            result.put(entry.getKey(), new ByteArrayByteIterator((byte[]) entry.getValue()));
+          }
         }
-        if (!shardKey.isEmpty()) {
-          queryResult.put(shardKey, new StringByteIterator(queryResult.getString(shardKey)));
-        }
-        result.putAll(new LinkedHashMap(queryResult));
         return Status.OK;
       }
       System.err.println("No results returned for key " + key);
