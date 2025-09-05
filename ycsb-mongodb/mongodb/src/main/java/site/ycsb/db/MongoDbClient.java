@@ -125,6 +125,9 @@ public class MongoDbClient extends DB {
 
   private static String datatype = "binData";
 
+  /** Whether to use MongoDB ObjectId for _id field instead of string keys */
+  private static boolean useObjectId = false;
+
   private static final String algorithm = "AEAD_AES_256_CBC_HMAC_SHA_512-Random";
 
   private static boolean isSharded = false;
@@ -559,6 +562,25 @@ public class MongoDbClient extends DB {
           parseCommaSeparatedIntegers(props.getProperty("mongodb.contentionFactors", ""), -1);
       discreteFields = createDiscreteFieldsMap(props.getProperty("mongodb.cardinalities", ""));
 
+      // ObjectId configuration - only enabled explicitly and only for load phase
+      boolean explicitObjectId = Boolean.parseBoolean(props.getProperty("mongodb.useObjectId", "false"));
+      boolean dotransactions = Boolean.parseBoolean(props.getProperty("dotransactions", "true"));
+      boolean isLoadMode = !dotransactions;
+
+      // Only use ObjectId if explicitly configured AND in load mode
+      useObjectId = explicitObjectId && isLoadMode;
+
+      if (explicitObjectId && !isLoadMode) {
+        System.out.println("WARNING: mongodb.useObjectId=true is only supported during load phase (-load). Using YCSB string keys for benchmark phase.");
+        useObjectId = false;
+      }
+
+      if (useObjectId) {
+        System.out.println("Using MongoDB native ObjectId for _id field during load phase");
+      } else {
+        System.out.println("Using YCSB string keys for _id field");
+      }
+
       try {
         MongoClientSettings.Builder settingsBuilder = MongoClientSettings.builder();
         // Need to use a larger connection pool to talk to mongocryptd/keyvault
@@ -703,7 +725,15 @@ public class MongoDbClient extends DB {
   @Override
   public Status insert(String table, String key, Map<String, ByteIterator> values) {
     MongoCollection<Document> collection = db[serverCounter++ % db.length].getCollection(table);
-    Document r = new Document("_id", key);
+    Document r;
+    if (useObjectId) {
+      // Let MongoDB auto-generate ObjectId by not setting _id field
+      r = new Document();
+      // Store the YCSB key as a separate field so other operations can find the document
+      r.put("ycsb_key", key);
+    } else {
+      r = new Document("_id", key);
+    }
     for (String k : values.keySet()) {
       byte[] data = overrideDataIfDiscrete(k, values.get(k).toArray());
       if (datatype.equals("string")) {
