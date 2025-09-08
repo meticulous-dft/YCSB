@@ -258,10 +258,11 @@ public class CoreWorkload extends Workload {
   /** Default value of the percentage operations accessing the hot set. */
   public static final String HOTSPOT_OPN_FRACTION_DEFAULT = "0.8";
 
-  /** How many times to retry when insertion of a single item to a DB fails. */
+  /** How many times to retry when insertion of a single item to a DB fails.
+   * Use -1 for infinite retries, 0 for no retries, positive values for limited retries. */
   public static final String INSERTION_RETRY_LIMIT = "core_workload_insertion_retry_limit";
 
-  public static final String INSERTION_RETRY_LIMIT_DEFAULT = "0";
+  public static final String INSERTION_RETRY_LIMIT_DEFAULT = "-1";
 
   /** On average, how long to wait between the retries, in seconds. */
   public static final String INSERTION_RETRY_INTERVAL = "core_workload_insertion_retry_interval";
@@ -567,8 +568,9 @@ public class CoreWorkload extends Workload {
       }
       // Retry if configured. Without retrying, the load process will fail
       // even if one single insertion fails. User can optionally configure
-      // an insertion retry limit (default is 0) to enable retry.
-      if (++numOfRetries <= insertionRetryLimit) {
+      // an insertion retry limit (default is -1 for infinite retries).
+      // A value of -1 means infinite retries, 0 means no retries, positive values set a limit.
+      if (insertionRetryLimit == -1 || ++numOfRetries <= insertionRetryLimit) {
         System.err.println("Retrying insertion, retry count: " + numOfRetries);
         try {
           // Sleep for a random number between [0.8, 1.2)*insertionRetryInterval.
@@ -582,7 +584,7 @@ public class CoreWorkload extends Workload {
         System.err.println(
             "Error inserting, not retrying any more. number of attempts: "
                 + numOfRetries
-                + "Insertion Retry Limit: "
+                + " Insertion Retry Limit: "
                 + insertionRetryLimit);
         break;
       }
